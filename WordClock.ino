@@ -23,6 +23,7 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 
 void setup() {
+  Serial.begin(115200);
   WiFi.begin(SSID_NAME, SSID_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -48,9 +49,9 @@ void loop() {
   DisplayTime();
   
   if (DEBUG) {
-    delay(2500);
+    delay(1000);
   } else {
-    delay(15000);
+    delay(59000);
   }
 }
 
@@ -64,6 +65,10 @@ void DisplayTime() {
 int getCurrentMinutes() {
   if (DEBUG) {
     debugMinutes++;
+    if (debugMinutes >= 60) {
+      debugHours++;
+    }
+    debugMinutes = debugMinutes % 60;
     return debugMinutes;
   } else {
     return timeClient.getMinutes();
@@ -72,8 +77,8 @@ int getCurrentMinutes() {
 
 int getCurrentHour() {
   if (DEBUG) {
-    debugHours++;
-    return debugHours;
+    //debugHours++;
+    return debugHours % 24;
   } else {
     return timeClient.getHours();
   }
@@ -82,6 +87,12 @@ int getCurrentHour() {
 void setLedAfterTime() {
   int minutes = getCurrentMinutes();
   int hour = getCurrentHour();
+
+  if (DEBUG) {
+    Serial.print(hour);
+    Serial.print(":");
+    Serial.println(minutes);
+  }
 
   enableEsIst();
 
@@ -423,30 +434,30 @@ void enableKurz() {
 }
 
 void enable5M() {
-  ledsactive[105] = true;
+  ledsactive[92] = true;
 }
 
 void enable10M() {
-  ledsactive[106] = true;
-  ledsactive[107] = true;
+  ledsactive[90] = true;
+  ledsactive[91] = true;
 }
 
 void enableNach() {
-  ledsactive[100] = true;
-  ledsactive[101] = true;
-  ledsactive[102] = true;
-  ledsactive[103] = true;
+  ledsactive[94] = true;
+  ledsactive[95] = true;
+  ledsactive[96] = true;
+  ledsactive[97] = true;
 }
 
 void enableVor() {
-  ledsactive[97] = true;
   ledsactive[98] = true;
   ledsactive[99] = true;
+  ledsactive[100] = true;
 }
 
 void enableUm() {
-  ledsactive[94] = true;
-  ledsactive[95] = true;
+  ledsactive[102] = true;
+  ledsactive[103] = true;
 }
 
 void enableViertel() {
@@ -460,10 +471,10 @@ void enableViertel() {
 }
 
 void enableHalb() {
-  ledsactive[90] = true;
-  ledsactive[91] = true;
-  ledsactive[92] = true;
-  ledsactive[93] = true;
+  ledsactive[104] = true;
+  ledsactive[105] = true;
+  ledsactive[106] = true;
+  ledsactive[107] = true;
 }
 
 void enableDreiviertel() {
@@ -495,25 +506,25 @@ void enableZwei() {
 }
 
 void enableDrei() {
-  ledsactive[64] = true;
-  ledsactive[65] = true;
-  ledsactive[66] = true;
-  ledsactive[67] = true;
+  ledsactive[58] = true;
+  ledsactive[59] = true;
+  ledsactive[60] = true;
+  ledsactive[61] = true;
 }
 
 void enableVier() {
-  ledsactive[32] = true;
-  ledsactive[33] = true;
-  ledsactive[34] = true;
-  ledsactive[35] = true;
+  ledsactive[18] = true;
+  ledsactive[19] = true;
+  ledsactive[20] = true;
+  ledsactive[21] = true;
 }
 
 void enableFuenf() {
-  ledsactive[54] = true;
-  ledsactive[55] = true;
-  ledsactive[56] = true;
-  ledsactive[57] = true;
-  ledsactive[58] = true;
+  ledsactive[67] = true;
+  ledsactive[68] = true;
+  ledsactive[69] = true;
+  ledsactive[70] = true;
+  ledsactive[71] = true;
 }
 
 void enableSechs() {
@@ -534,10 +545,10 @@ void enableSieben() {
 }
 
 void enableAcht() {
-  ledsactive[59] = true;
-  ledsactive[60] = true;
-  ledsactive[61] = true;
-  ledsactive[62] = true;
+  ledsactive[63] = true;
+  ledsactive[64] = true;
+  ledsactive[65] = true;
+  ledsactive[66] = true;
 }
 
 void enableNeun() {
@@ -548,10 +559,10 @@ void enableNeun() {
 }
 
 void enableZehn() {
-  ledsactive[68] = true;
-  ledsactive[69] = true;
-  ledsactive[70] = true;
-  ledsactive[71] = true;
+  ledsactive[54] = true;
+  ledsactive[55] = true;
+  ledsactive[56] = true;
+  ledsactive[57] = true;
 }
 
 void enableElf() {
@@ -570,8 +581,8 @@ void enableZwoelf() {
 }
 
 void enableAm() {
-  ledsactive[22] = true;
-  ledsactive[23] = true;
+  ledsactive[30] = true;
+  ledsactive[31] = true;
 }
 
 void enableNachts() {
@@ -584,10 +595,10 @@ void enableNachts() {
 }
 
 void enableFrueh() {
-  ledsactive[18] = true;
-  ledsactive[19] = true;
-  ledsactive[20] = true;
-  ledsactive[21] = true;
+  ledsactive[32] = true;
+  ledsactive[33] = true;
+  ledsactive[34] = true;
+  ledsactive[35] = true;
 }
 
 void enableVormittag() {
