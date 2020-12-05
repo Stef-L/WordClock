@@ -1,43 +1,50 @@
 #include "config.h"
 
 #include <FastLED.h>
-// https://github.com/arduino-libraries/NTPClient
-#include <NTPClient.h>
+#include <ezTime.h>
 #include <ESP8266WiFi.h>
-#include <WiFiUdp.h>
 
 #define NUM_LEDS 126
 #define DATA_PIN 4
-#define DUNKEL 55
-#define HELL 90
+#define DUNKEL 90
+#define HELL 255
 
 #define DEBUG   false
 
 int brightness;
 int debugMinutes;
 int debugHours;
-int pauseSeconds;
 
 CRGB leds[NUM_LEDS];
 bool ledsactive[NUM_LEDS];
 CRGB color[NUM_LEDS];
 
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP);
+Timezone myTZ;
 
 void setup() {
   brightness = HELL;
-  pauseSeconds = 59;
   Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
   WiFi.begin(SSID_NAME, SSID_PASSWORD);
   if (!DEBUG) {
     while (WiFi.status() != WL_CONNECTED) {
       delay(500);
     }
   }
-  timeClient.setTimeOffset(7200);
-  timeClient.begin();
-  delay(5000);
+  
+  waitForSync();
+
+  if (myTZ.setLocation()) {
+    if (DEBUG) {
+      Serial.println(myTZ.dateTime());
+    }
+  } else {
+    myTZ.setLocation(F("de"));
+    if (DEBUG) {
+      Serial.println(myTZ.dateTime());
+    }
+  }
+  updateNTP();
   
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
   FastLED.setBrightness(brightness);
@@ -49,19 +56,24 @@ void setup() {
   }
 
   LauflichtRegenbogen();
-//  clearAll();
   DisplayTime();
 }
 
 void loop() {
-  timeClient.update();
-
-  DisplayTime();
-  
   if (DEBUG) {
     delay(1000);
   } else {
-    delay(pauseSeconds * 1000);
+    if (minuteChanged()) {
+      // Sync time every 30 minutes
+      if (myTZ.minute() % 30 == 0) {
+        updateNTP();
+      }
+      // Every hour: Show Rainbow
+      if (myTZ.minute() == 0) {
+        LauflichtRegenbogen();
+      }
+      DisplayTime();
+    }
   }
 }
 
@@ -81,16 +93,15 @@ int getCurrentMinutes() {
     debugMinutes = debugMinutes % 60;
     return debugMinutes;
   } else {
-    return timeClient.getMinutes();
+    return myTZ.minute();
   }
 }
 
 int getCurrentHour() {
   if (DEBUG) {
-    //debugHours++;
     return debugHours % 24;
   } else {
-    return timeClient.getHours();
+    return myTZ.hour();
   }
 }
 
@@ -98,7 +109,7 @@ void setLedAfterTime() {
   int minutes = getCurrentMinutes();
   int hour = getCurrentHour();
 
-  if ((hour < 6) || (hour >= 22)) {
+  if ((hour < 5) || (hour > 21)) {
     brightness = DUNKEL;
   } else {
     brightness = HELL;
@@ -116,7 +127,6 @@ void setLedAfterTime() {
     enableGenau();
     enableUm();
     setHourLedAfterTime(hour);
-    pauseSeconds = 60;
     return;
   }
   if (minutes <= 4) {
@@ -124,7 +134,6 @@ void setLedAfterTime() {
     enableNach();
     enableUm();
     setHourLedAfterTime(hour);
-    pauseSeconds = 240;
     return;
   }
   if (minutes == 5) {
@@ -132,14 +141,12 @@ void setLedAfterTime() {
     enableNach();
     enableUm();
     setHourLedAfterTime(hour);
-    pauseSeconds = 60;
     return;
   }
   if (minutes <= 9) {
     enableNach();
     enableUm();
     setHourLedAfterTime(hour);
-    pauseSeconds = 240;
     return;
   }
   if (minutes == 10) {
@@ -147,7 +154,6 @@ void setLedAfterTime() {
     enableNach();
     enableUm();
     setHourLedAfterTime(hour);
-    pauseSeconds = 60;
     return;
   }
   hour++;
@@ -156,14 +162,12 @@ void setLedAfterTime() {
     enableVor();
     enableViertel();
     setHourLedAfterTime(hour);
-    pauseSeconds = 240;
     return;
   }
   if (minutes == 15) {
     enableGenau();
     enableViertel();
     setHourLedAfterTime(hour);
-    pauseSeconds = 60;
     return;
   }
   if (minutes <= 19) {
@@ -171,7 +175,6 @@ void setLedAfterTime() {
     enableNach();
     enableViertel();
     setHourLedAfterTime(hour);
-    pauseSeconds = 240;
     return;
   }
   if (minutes == 20) {
@@ -179,14 +182,12 @@ void setLedAfterTime() {
     enableVor();
     enableHalb();
     setHourLedAfterTime(hour);
-    pauseSeconds = 60;
     return;
   }
   if (minutes <= 24) {
     enableVor();
     enableHalb();
     setHourLedAfterTime(hour);
-    pauseSeconds = 240;
     return;
   }
   if (minutes == 25) {
@@ -194,7 +195,6 @@ void setLedAfterTime() {
     enableVor();
     enableHalb();
     setHourLedAfterTime(hour);
-    pauseSeconds = 60;
     return;
   }
   if (minutes <= 29) {
@@ -202,14 +202,12 @@ void setLedAfterTime() {
     enableVor();
     enableHalb();
     setHourLedAfterTime(hour);
-    pauseSeconds = 240;
     return;
   }
   if (minutes == 30) {
     enableGenau();
     enableHalb();
     setHourLedAfterTime(hour);
-    pauseSeconds = 60;
     return;
   }
   if (minutes <= 34) {
@@ -217,7 +215,6 @@ void setLedAfterTime() {
     enableNach();
     enableHalb();
     setHourLedAfterTime(hour);
-    pauseSeconds = 240;
     return;
   }
   if (minutes == 35) {
@@ -225,14 +222,12 @@ void setLedAfterTime() {
     enableNach();
     enableHalb();
     setHourLedAfterTime(hour);
-    pauseSeconds = 60;
     return;
   }
   if (minutes <= 39) {
     enableNach();
     enableHalb();
     setHourLedAfterTime(hour);
-    pauseSeconds = 240;
     return;
   }
   if (minutes == 40) {
@@ -240,7 +235,6 @@ void setLedAfterTime() {
     enableNach();
     enableHalb();
     setHourLedAfterTime(hour);
-    pauseSeconds = 60;
     return;
   }
   if (minutes <= 44) {
@@ -248,14 +242,12 @@ void setLedAfterTime() {
     enableVor();
     enableDreiviertel();
     setHourLedAfterTime(hour);
-    pauseSeconds = 240;
     return;
   }
   if (minutes == 45) {
     enableGenau();
     enableDreiviertel();
     setHourLedAfterTime(hour);
-    pauseSeconds = 60;
     return;
   }
   if (minutes <= 49) {
@@ -263,7 +255,6 @@ void setLedAfterTime() {
     enableNach();
     enableDreiviertel();
     setHourLedAfterTime(hour);
-    pauseSeconds = 240;
     return;
   }
   if (minutes == 50) {
@@ -271,14 +262,12 @@ void setLedAfterTime() {
     enableVor();
     enableUm();
     setHourLedAfterTime(hour);
-    pauseSeconds = 60;
     return;
   }
   if (minutes <= 54) {
     enableVor();
     enableUm();
     setHourLedAfterTime(hour);
-    pauseSeconds = 240;
     return;
   }
   if (minutes == 55) {
@@ -286,7 +275,6 @@ void setLedAfterTime() {
     enableVor();
     enableUm();
     setHourLedAfterTime(hour);
-    pauseSeconds = 60;
     return;
   }
   if (minutes <= 59) {
@@ -294,7 +282,6 @@ void setLedAfterTime() {
     enableVor();
     enableUm();
     setHourLedAfterTime(hour);
-    pauseSeconds = 240;
     return;
   }
 }
@@ -425,6 +412,7 @@ void showLEDs() {
       leds[i] = CRGB::Black;
     }
   }
+  FastLED.setBrightness(brightness);
   FastLED.show();
   if (DEBUG) {
     flashOperationDone();
@@ -730,7 +718,7 @@ void LauflichtRegenbogen() {
       }
     }
     FastLED.show();
-    delay(125);
+    delay(100);
   }
   for (int dot = 0; dot < (NUM_LEDS + 7); dot++) {
     // Rot, Orange, Gelb, Grün, Blau, Lila
@@ -740,7 +728,7 @@ void LauflichtRegenbogen() {
       }
     }
     FastLED.show();
-    delay(125);
+    delay(85);
   }
 }
 
