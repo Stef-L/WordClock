@@ -34,15 +34,9 @@ void setup() {
   
   waitForSync();
 
-  if (myTZ.setLocation()) {
-    if (DEBUG) {
-      Serial.println(myTZ.dateTime());
-    }
-  } else {
-    myTZ.setLocation(F("de"));
-    if (DEBUG) {
-      Serial.println(myTZ.dateTime());
-    }
+  myTZ.setLocation(F("de"));
+  if (DEBUG) {
+    Serial.println(myTZ.dateTime());
   }
   updateNTP();
   
@@ -70,6 +64,7 @@ void loop() {
       }
       // Every hour: Show Rainbow
       if (myTZ.minute() == 0) {
+        
         LauflichtRegenbogen();
       }
       DisplayTime();
@@ -703,18 +698,21 @@ void Lauflicht() {
 }
 
 void LauflichtRegenbogen() {
-  color[6] = CRGB::Red;
-  color[5] = CRGB::Orange;
-  color[4] = CRGB::Yellow;
-  color[3] = CRGB::Green;
-  color[2] = CRGB::Blue;
-  color[1] = CRGB::Purple;
-  color[0] = CRGB::Black;
+  int rainbowColorCount = 8;
+  CRGB rainbowColor[rainbowColorCount];
+  rainbowColor[7] = CRGB::Black;
+  rainbowColor[6] = CRGB::Red;
+  rainbowColor[5] = CRGB::Orange;
+  rainbowColor[4] = CRGB::Yellow;
+  rainbowColor[3] = CRGB::Green;
+  rainbowColor[2] = CRGB::Blue;
+  rainbowColor[1] = CRGB::Purple;
+  rainbowColor[0] = CRGB::Black;
   for (int dot = (NUM_LEDS + 7); dot > 0; dot--) {
     // Rot, Orange, Gelb, Grün, Blau, Lila
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i <= rainbowColorCount; i++) {
       if ((dot - i) > 0 && (dot - i) < NUM_LEDS) {
-        leds[dot - i] = color[i];
+        leds[dot - i] = rainbowColor[i];
       }
     }
     FastLED.show();
@@ -722,9 +720,9 @@ void LauflichtRegenbogen() {
   }
   for (int dot = 0; dot < (NUM_LEDS + 7); dot++) {
     // Rot, Orange, Gelb, Grün, Blau, Lila
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i <= rainbowColorCount; i++) {
       if ((dot - i) > 0 && (dot - i) < NUM_LEDS) {
-        leds[dot - i] = color[i];
+        leds[dot - i] = rainbowColor[i];
       }
     }
     FastLED.show();
